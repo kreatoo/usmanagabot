@@ -24,7 +24,13 @@
                 "display_name": "Büyüklük Limiti",
                 "placeholder": "Minimum deprem büyüklüğünü seçin",
                 "pretty_name": "Büyüklük Limiti",
-                "parameters": {},
+                "invalid_value": "Geçersiz büyüklük değeri sağlandı.",
+                "parameters": {
+                    "magnitude": {
+                        "name": "Büyüklük Limiti",
+                        "placeholder": "3.0",
+                    },
+                },
             },
             "setnotificationchannel": {
                 "description": "Deprem bildirimlerinin gönderileceği kanalı ayarlar.",

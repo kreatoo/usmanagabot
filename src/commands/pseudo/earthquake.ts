@@ -384,55 +384,90 @@ export default class EarthquakeNotifierCommand extends CustomizableCommand {
 
     /**
      * Sets the minimum magnitude limit for reporting earthquakes.
-     * This is a two-step setting: first, it presents a select menu with magnitude options.
-     * Then, it saves the selected value.
-     * @param interaction The interaction from the string select menu.
-     * @param args The selected magnitude value.
+     * @param interaction The interaction from the settings.
+     * @param args Additional arguments.
      */
     @SettingGenericSettingComponent({
         database: Earthquake,
         database_key: 'magnitude_limit',
-        format_specifier: '%s',
+        format_specifier: '**%s**',
     })
-    public async setMagnitudeLimit(interaction: StringSelectMenuInteraction, args: string): Promise<void> {
+    public async setMagnitudeLimit(
+        interaction: StringSelectMenuInteraction | ButtonInteraction | ModalSubmitInteraction,
+        args?: string,
+    ): Promise<void> {
         this.log('debug', 'settings.selectmenu.start', { name: this.name, guild: interaction.guild });
         const earthquake = (await this.db.findOne(Earthquake, {
             where: { from_guild: { gid: BigInt(interaction.guildId!) } },
         }))!;
         const user = (await this.db.getUser(BigInt(interaction.user.id)))!;
 
-        if (args) {
-            earthquake.magnitude_limit = parseFloat(args);
-            earthquake!.latest_action_from_user = user;
-            earthquake!.timestamp = new Date();
-            await this.db.save(Earthquake, earthquake!);
+        if (interaction.isButton() && args === 'set') {
+            await interaction.showModal({
+                customId: `settings:earthquake:setmagnitudelimit:submit`,
+                title: this.t.commands({
+                    key: 'settings.setmagnitudelimit.pretty_name',
+                    guild_id: BigInt(interaction.guildId!),
+                }),
+                components: [
+                    new ActionRowBuilder<TextInputBuilder>().addComponents(
+                        new TextInputBuilder()
+                            .setCustomId('magnitude')
+                            .setLabel(
+                                this.t.commands({
+                                    key: 'settings.setmagnitudelimit.display_name',
+                                    guild_id: BigInt(interaction.guildId!),
+                                }),
+                            )
+                            .setPlaceholder('3.0')
+                            .setStyle(TextInputStyle.Short)
+                            .setRequired(true),
+                    ),
+                ],
+            });
+            return;
+        }
+
+        if (interaction.isModalSubmit() && args === 'submit') {
+            const magnitude_str = interaction.fields.getTextInputValue('magnitude');
+            const magnitude = parseFloat(magnitude_str.replace(',', '.'));
+
+            if (isNaN(magnitude)) {
+                this.warning = this.t.commands({
+                    key: 'settings.setmagnitudelimit.invalid_value',
+                    guild_id: BigInt(interaction.guildId!),
+                });
+                await this.settingsUI(interaction);
+                return;
+            }
+
+            earthquake.magnitude_limit = magnitude;
+            earthquake.latest_action_from_user = user;
+            earthquake.timestamp = new Date();
+            await this.db.save(Earthquake, earthquake);
             await this.settingsUI(interaction);
             this.log('debug', 'settings.selectmenu.success', { name: this.name, guild: interaction.guild });
             return;
         }
 
-        await interaction.update({
-            components: [
-                new ActionRowBuilder<StringSelectMenuBuilder>()
-                    .addComponents(
-                        new StringSelectMenuBuilder()
-                            .setCustomId('settings:earthquake:setmagnitude')
-                            .setPlaceholder(
-                                this.t.commands({
-                                    key: 'settings.setmagnitudelimit.placeholder',
+        if (interaction.isStringSelectMenu()) {
+            await interaction.update({
+                components: [
+                    new ActionRowBuilder<ButtonBuilder>().addComponents(
+                        new ButtonBuilder()
+                            .setCustomId(`settings:earthquake:setmagnitudelimit:set`)
+                            .setLabel(
+                                this.t.system({
+                                    caller: 'buttons',
+                                    key: 'set',
                                     guild_id: BigInt(interaction.guildId!),
                                 }),
                             )
-                            .addOptions(
-                                ['1.0', '1.5', '2.0', '2.5', '3.0', '3.5', '4.0', '4.5', '5.0'].map((magnitude) => ({
-                                    label: magnitude,
-                                    value: `settings:earthquake:setmagnitudelimit:${magnitude}`,
-                                })),
-                            ),
-                    )
-                    .toJSON(),
-            ],
-        });
+                            .setStyle(ButtonStyle.Primary),
+                    ),
+                ],
+            });
+        }
     }
 
     /**

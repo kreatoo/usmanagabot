@@ -24,7 +24,13 @@
                 "display_name": "Magnitude Limit",
                 "placeholder": "Select the minimum earthquake magnitude",
                 "pretty_name": "Magnitude Limit",
-                "parameters": {},
+                "invalid_value": "Invalid magnitude value provided.",
+                "parameters": {
+                    "magnitude": {
+                        "name": "Magnitude Limit",
+                        "placeholder": "3.0",
+                    },
+                },
             },
             "setnotificationchannel": {
                 "description": "Sets the channel where earthquake notifications will be sent.",
