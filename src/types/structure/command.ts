@@ -182,7 +182,11 @@ export abstract class BaseCommand {
      * @protected
      * @returns {(type: keyof typeof LogLevels, key: string, replacements?: { [key: string]: unknown }) => void} The logging function.
      */
-    protected get log(): (type: keyof typeof LogLevels, key: string, replacements?: { [key: string]: unknown }) => void {
+    protected get log(): (
+        type: keyof typeof LogLevels,
+        key: string,
+        replacements?: { [key: string]: unknown },
+    ) => void {
         return (type: keyof typeof LogLevels, key: string, replacements?: { [key: string]: unknown }) => {
             return Logger.send('commands', this.name, type, key, replacements);
         };
@@ -381,20 +385,20 @@ export abstract class CustomizableCommand extends BaseCommand {
                                 : row.map((val) => format(setting.format_specifier, val)).join(', ')
                             : `:orange_circle: ${this.t.commands({ caller: 'settings', key: 'execute.not_set', guild_id: BigInt(interaction.guildId!) })}`
                         : this.t.commands({
-                            caller: 'settings',
-                            key: 'execute.view_in_edit_mode',
-                            guild_id: BigInt(interaction.guildId!),
-                        });
+                              caller: 'settings',
+                              key: 'execute.view_in_edit_mode',
+                              guild_id: BigInt(interaction.guildId!),
+                          });
                 } else {
                     value = setting.database_key
                         ? row
                             ? format(setting.format_specifier, row ?? '')
                             : `:orange_circle: ${this.t.commands({ caller: 'settings', key: 'execute.not_set', guild_id: BigInt(interaction.guildId!) })}`
                         : this.t.commands({
-                            caller: 'settings',
-                            key: 'execute.view_in_edit_mode',
-                            guild_id: BigInt(interaction.guildId!),
-                        });
+                              caller: 'settings',
+                              key: 'execute.view_in_edit_mode',
+                              guild_id: BigInt(interaction.guildId!),
+                          });
                 }
                 ui.addFields({
                     name: key,
@@ -447,15 +451,15 @@ export abstract class CustomizableCommand extends BaseCommand {
                             user: user
                                 ? user.tag
                                 : this.t.commands({
-                                    key: 'execute.unknown_user',
-                                    guild_id: BigInt(interaction.guildId!),
-                                }),
+                                      key: 'execute.unknown_user',
+                                      guild_id: BigInt(interaction.guildId!),
+                                  }),
                             date: date
                                 ? date
                                 : this.t.commands({
-                                    key: 'execute.unknown_date',
-                                    guild_id: BigInt(interaction.guildId!),
-                                }),
+                                      key: 'execute.unknown_date',
+                                      guild_id: BigInt(interaction.guildId!),
+                                  }),
                         },
                         guild_id: BigInt(interaction.guildId!),
                     }),
@@ -475,7 +479,8 @@ export abstract class CustomizableCommand extends BaseCommand {
             } else if (
                 interaction.isStringSelectMenu() ||
                 interaction.isChannelSelectMenu() ||
-                interaction.isUserSelectMenu()
+                interaction.isUserSelectMenu() ||
+                interaction.isButton()
             ) {
                 await interaction.update(payload);
             } else if ((interaction.isModalSubmit() && interaction.isFromMessage()) || interaction.isRoleSelectMenu()) {

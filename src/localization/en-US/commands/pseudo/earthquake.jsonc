@@ -92,6 +92,9 @@
                     "role": {
                         "start": "Earthquake Notifier ping role change process initiated in guild \"{guild}\".",
                         "success": "Earthquake Notifier ping role successfully changed to \"{role}\" in guild \"{guild}\".",
+                        "clear": {
+                            "success": "Earthquake Notifier ping role successfully removed in guild \"{guild}\".",
+                        },
                     },
                     "toggle": {
                         "start": "Earthquake Notifier system enable/disable process initiated in guild \"{guild}\".",

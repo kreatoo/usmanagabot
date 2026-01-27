@@ -92,6 +92,9 @@
                     "role": {
                         "start": "\"{guild}\" sunucusunda Deprem Bildirici etiketlenecek rol değiştirme işlemi başlatıldı.",
                         "success": "\"{guild}\" sunucusunda Deprem Bildirici etiketlenecek rol başarıyla \"{role}\" olarak değiştirildi.",
+                        "clear": {
+                            "success": "\"{guild}\" sunucusunda Deprem Bildirici etiketlenecek rolü başarıyla kaldırıldı.",
+                        },
                     },
                     "toggle": {
                         "start": "\"{guild}\" sunucusunda Deprem Bildirici sistemini açma/kapatma işlemi başlatıldı.",
