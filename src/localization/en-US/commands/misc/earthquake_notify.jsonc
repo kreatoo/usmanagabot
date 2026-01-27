@@ -4,7 +4,7 @@
         "name": "earthquake_notify",
         "pretty_name": "Earthquake Notification",
         "description": "Manage your earthquake notification subscriptions.",
-        "help": "Subscribe to receive mentions when an earthquake occurs in specific cities.\n\n**Usage:**\n- `/earthquake_notify add <city>` - Subscribe to a city.\n- `/earthquake_notify remove <city>` - Unsubscribe from a city.\n- `/earthquake_notify list` - List your subscriptions.",
+        "help": "Subscribe to receive direct messages when an earthquake occurs in specific cities.\n\n**Usage:**\n- `/earthquake_notify add <city>` - Subscribe to a city.\n- `/earthquake_notify remove <city>` - Unsubscribe from a city.\n- `/earthquake_notify list` - List your subscriptions.",
         "parameters": {
             "subcommand": {
                 "name": "action",

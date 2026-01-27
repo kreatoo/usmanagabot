@@ -118,11 +118,11 @@ export default class EarthquakeNotifierCommand extends CustomizableCommand {
 
                 const geo_translate = geo_response.locality || geo_response.city || geo_response.principalSubdivision;
 
-                let content = '';
                 const locations = [geo_response.locality, geo_response.city, geo_response.principalSubdivision]
                     .filter((loc): loc is string => !!loc)
                     .map((loc) => normalizeText(loc));
 
+                const subscribedUserIds: bigint[] = [];
                 if (locations.length > 0) {
                     const subscriptions = await this.db.find(EarthquakeSubscription, {
                         where: {
@@ -132,13 +132,13 @@ export default class EarthquakeNotifierCommand extends CustomizableCommand {
                     });
 
                     if (subscriptions.length > 0) {
-                        const userIds = [...new Set(subscriptions.map((sub) => sub.user.uid))];
-                        content = userIds.map((uid) => `<@${uid}>`).join(' ');
+                        subscribedUserIds.push(...new Set(subscriptions.map((sub) => sub.user.uid)));
                     }
                 }
 
+                let content = '';
                 if (guild.ping_role_id) {
-                    content = (content ? content + ' ' : '') + `<@&${guild.ping_role_id}>`;
+                    content = `<@&${guild.ping_role_id}>`;
                 }
 
                 const post = new EmbedBuilder();
@@ -208,9 +208,24 @@ export default class EarthquakeNotifierCommand extends CustomizableCommand {
                     logs.from_guild = guild.from_guild;
                     await channel
                         .send({ content: content || undefined, embeds: [post] })
-                        .then(() => {
+                        .then(async () => {
                             logs.is_delivered = true;
                             delivered_count++;
+
+                            // Send DMs to subscribed users
+                            for (const uid of subscribedUserIds) {
+                                try {
+                                    const user = await BotClient.client.users.fetch(uid.toString());
+                                    if (user) {
+                                        await user.send({ embeds: [post] });
+                                    }
+                                } catch (error) {
+                                    this.log('debug', 'cronjob.dm.failed', {
+                                        user: uid,
+                                        error: (error as Error).message,
+                                    });
+                                }
+                            }
                         })
                         .catch(() => {
                             logs.is_delivered = false;

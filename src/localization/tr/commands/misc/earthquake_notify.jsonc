@@ -4,7 +4,7 @@
         "name": "earthquake_notify",
         "pretty_name": "Deprem Bildirimi",
         "description": "Deprem bildirim aboneliklerinizi yönetin.",
-        "help": "Belirli şehirlerde deprem olduğunda etiketlenmek için abone olun.\n\n**Kullanım:**\n- `/earthquake_notify add <şehir>` - Bir şehre abone ol.\n- `/earthquake_notify remove <şehir>` - Bir şehirden aboneliği kaldır.\n- `/earthquake_notify list` - Aboneliklerini listele.",
+        "help": "Belirli şehirlerde deprem olduğunda direkt mesaj almak için abone olun.\n\n**Kullanım:**\n- `/earthquake_notify add <şehir>` - Bir şehre abone ol.\n- `/earthquake_notify remove <şehir>` - Bir şehirden aboneliği kaldır.\n- `/earthquake_notify list` - Aboneliklerini listele.",
         "parameters": {
             "subcommand": {
                 "name": "işlem",
