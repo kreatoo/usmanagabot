@@ -8,6 +8,7 @@ import {
     SettingChannelMenuComponent,
     SettingGenericSettingComponent,
     SettingModalComponent,
+    SettingRoleSelectMenuComponent,
 } from '@src/types/decorator/settingcomponents';
 import { CustomizableCommand } from '@src/types/structure/command';
 import {
@@ -17,6 +18,7 @@ import {
     Colors,
     EmbedBuilder,
     ModalSubmitInteraction,
+    RoleSelectMenuInteraction,
     StringSelectMenuBuilder,
     StringSelectMenuInteraction,
     TextInputStyle,
@@ -129,6 +131,10 @@ export default class EarthquakeNotifierCommand extends CustomizableCommand {
                         const userIds = [...new Set(subscriptions.map((sub) => sub.user.uid))];
                         content = userIds.map((uid) => `<@${uid}>`).join(' ');
                     }
+                }
+
+                if (guild.ping_role_id) {
+                    content = (content ? content + ' ' : '') + `<@&${guild.ping_role_id}>`;
                 }
 
                 const post = new EmbedBuilder();
@@ -271,6 +277,34 @@ export default class EarthquakeNotifierCommand extends CustomizableCommand {
             name: this.name,
             guild: interaction.guild,
             channel: earthquake!.channel_id,
+        });
+    }
+
+    /**
+     * Sets the role to be pinged on every earthquake.
+     * @param interaction The interaction from the role select menu.
+     */
+    @SettingRoleSelectMenuComponent({
+        database: Earthquake,
+        database_key: 'ping_role_id',
+        format_specifier: '<@&%s>',
+    })
+    public async setPingRole(interaction: RoleSelectMenuInteraction): Promise<void> {
+        this.log('debug', 'settings.role.start', { name: this.name, guild: interaction.guild });
+        const earthquake = await this.db.findOne(Earthquake, {
+            where: { from_guild: { gid: BigInt(interaction.guildId!) } },
+        });
+        const user = (await this.db.getUser(BigInt(interaction.user.id)))!;
+
+        earthquake!.ping_role_id = interaction.values[0];
+        earthquake!.latest_action_from_user = user;
+        earthquake!.timestamp = new Date();
+        await this.db.save(Earthquake, earthquake!);
+        await this.settingsUI(interaction);
+        this.log('debug', 'settings.role.success', {
+            name: this.name,
+            guild: interaction.guild,
+            role: earthquake!.ping_role_id,
         });
     }
 

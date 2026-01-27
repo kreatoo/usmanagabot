@@ -19,6 +19,9 @@ export class Earthquake {
     @Column({ type: 'text', nullable: true, default: null })
     seismicportal_api_url!: string;
 
+    @Column({ type: 'bigint', nullable: true, default: null })
+    ping_role_id!: string;
+
     @Column({ type: 'varchar', nullable: true, default: 'en', length: 8 })
     region_code!: string;
 

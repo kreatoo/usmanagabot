@@ -14,7 +14,7 @@
             "other_earthquakes": "For Other Earthquakes",
             "source": "Source",
             "time": "Time",
-            "title": "New Earthquake Alert!"
+            "title": "New Earthquake Alert!",
         },
         "subcommands": {},
         "events": {},
@@ -24,14 +24,14 @@
                 "display_name": "Magnitude Limit",
                 "placeholder": "Select the minimum earthquake magnitude",
                 "pretty_name": "Magnitude Limit",
-                "parameters": {}
+                "parameters": {},
             },
             "setnotificationchannel": {
                 "description": "Sets the channel where earthquake notifications will be sent.",
                 "display_name": "Notification Channel",
                 "placeholder": "Select the earthquake notification channel",
                 "pretty_name": "Notification Channel",
-                "parameters": {}
+                "parameters": {},
             },
             "setregioncode": {
                 "description": "Sets the region code for earthquake notification location information.",
@@ -42,9 +42,9 @@
                     "region_code": {
                         "name": "Region Code",
                         "description": "The region code for earthquake notification location information.",
-                        "placeholder": "en"
-                    }
-                }
+                        "placeholder": "en",
+                    },
+                },
             },
             "setseismicportalapiurl": {
                 "description": "Sets the Seismic Portal API URL to be used.",
@@ -55,15 +55,22 @@
                 "parameters": {
                     "seismicportal_api_url": {
                         "name": "Seismic Portal API URL",
-                        "placeholder": "https://www.seismicportal.eu/fdsnws/event/1/query?..."
-                    }
-                }
+                        "placeholder": "https://www.seismicportal.eu/fdsnws/event/1/query?...",
+                    },
+                },
+            },
+            "setpingrole": {
+                "description": "Sets the role to be pinged on every earthquake notification.",
+                "display_name": "Ping Role",
+                "placeholder": "Select a role to ping",
+                "pretty_name": "Ping Role",
+                "parameters": {},
             },
             "toggle": {
                 "description": "Enables or disables the earthquake notifier system on the server.",
                 "pretty_name": "Toggle Earthquake Notifier System",
-                "parameters": {}
-            }
+                "parameters": {},
+            },
         },
         "logging": {
             "debug": {
@@ -71,47 +78,51 @@
                     "invalid_url": "Invalid Seismic Portal API URL provided by user \"{user}\" in guild \"{guild}\": \"{url}\".",
                     "channel": {
                         "start": "Earthquake Notifier notification channel change process initiated in guild \"{guild}\".",
-                        "success": "Earthquake Notifier notification channel successfully changed to \"{channel}\" in guild \"{guild}\"."
+                        "success": "Earthquake Notifier notification channel successfully changed to \"{channel}\" in guild \"{guild}\".",
                     },
                     "modalsubmit": {
                         "start": "Earthquake Notifier modal setting change process initiated in guild \"{guild}\".",
-                        "success": "Earthquake Notifier modal setting successfully changed in guild \"{guild}\"."
+                        "success": "Earthquake Notifier modal setting successfully changed in guild \"{guild}\".",
                     },
                     "selectmenu": {
                         "start": "Earthquake Notifier select menu setting change process initiated in guild \"{guild}\".",
-                        "success": "Earthquake Notifier select menu setting successfully changed in guild \"{guild}\"."
+                        "success": "Earthquake Notifier select menu setting successfully changed in guild \"{guild}\".",
+                    },
+                    "role": {
+                        "start": "Earthquake Notifier ping role change process initiated in guild \"{guild}\".",
+                        "success": "Earthquake Notifier ping role successfully changed to \"{role}\" in guild \"{guild}\".",
                     },
                     "toggle": {
                         "start": "Earthquake Notifier system enable/disable process initiated in guild \"{guild}\".",
-                        "success": "Earthquake Notifier system successfully updated to \"{toggle}\" in guild \"{guild}\"."
-                    }
+                        "success": "Earthquake Notifier system successfully updated to \"{toggle}\" in guild \"{guild}\".",
+                    },
                 },
                 "configuration": {
-                    "missing": "No configuration found for the Earthquake command."
+                    "missing": "No configuration found for the Earthquake command.",
                 },
                 "cronjob": {
                     "start": "Starting earthquake check...",
-                    "success": "Earthquake check completed in {guild} guilds. {count} earthquakes reported."
+                    "success": "Earthquake check completed in {guild} guilds. {count} earthquakes reported.",
                 },
                 "prepare": {
                     "start": "Preparing Earthquake Notifier command for guild \"{guild}\".",
-                    "success": "Earthquake Notifier command for guild \"{guild}\" prepared successfully."
-                }
+                    "success": "Earthquake Notifier command for guild \"{guild}\" prepared successfully.",
+                },
             },
             "info": {},
             "warn": {
                 "settings": {
-                    "invalid_url": "Invalid Seismic Portal API URL provided by user \"{user}\" in guild \"{guild}\": \"{url}\"."
-                }
+                    "invalid_url": "Invalid Seismic Portal API URL provided by user \"{user}\" in guild \"{guild}\": \"{url}\".",
+                },
             },
             "error": {},
             "log": {
                 "prepare": {
                     "database": {
-                        "success": "Earthquake Notifier command settings for guild \"{guild}\" successfully processed into the database."
-                    }
-                }
-            }
-        }
-    }
+                        "success": "Earthquake Notifier command settings for guild \"{guild}\" successfully processed into the database.",
+                    },
+                },
+            },
+        },
+    },
 }
