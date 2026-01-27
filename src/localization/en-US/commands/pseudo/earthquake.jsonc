@@ -67,6 +67,18 @@
                 "clear_label": "Remove Ping Role",
                 "parameters": {},
             },
+            "seteveryonepingthreshold": {
+                "description": "Sets the magnitude threshold for pinging everyone.",
+                "display_name": "@everyone Ping Threshold",
+                "pretty_name": "@everyone Ping Threshold",
+                "invalid_value": "Invalid magnitude value provided.",
+                "parameters": {
+                    "threshold": {
+                        "name": "Magnitude Threshold",
+                        "placeholder": "6.3",
+                    },
+                },
+            },
             "toggle": {
                 "description": "Enables or disables the earthquake notifier system on the server.",
                 "pretty_name": "Toggle Earthquake Notifier System",
@@ -88,6 +100,13 @@
                     "selectmenu": {
                         "start": "Earthquake Notifier select menu setting change process initiated in guild \"{guild}\".",
                         "success": "Earthquake Notifier select menu setting successfully changed in guild \"{guild}\".",
+                    },
+                    "threshold": {
+                        "start": "Earthquake Notifier @everyone ping threshold change process initiated in guild \"{guild}\".",
+                        "success": "Earthquake Notifier @everyone ping threshold successfully changed to \"{threshold}\" in guild \"{guild}\".",
+                        "clear": {
+                            "success": "Earthquake Notifier @everyone ping threshold successfully removed in guild \"{guild}\".",
+                        },
                     },
                     "role": {
                         "start": "Earthquake Notifier ping role change process initiated in guild \"{guild}\".",

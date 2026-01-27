@@ -25,6 +25,7 @@ import {
     RoleSelectMenuInteraction,
     StringSelectMenuBuilder,
     StringSelectMenuInteraction,
+    TextInputBuilder,
     TextInputStyle,
 } from 'discord.js';
 
@@ -139,6 +140,10 @@ export default class EarthquakeNotifierCommand extends CustomizableCommand {
                 let content = '';
                 if (guild.ping_role_id) {
                     content = `<@&${guild.ping_role_id}>`;
+                }
+
+                if (guild.everyone_ping_threshold !== null && eq.properties.mag >= guild.everyone_ping_threshold) {
+                    content = (content ? content + ' ' : '') + '@everyone';
                 }
 
                 const post = new EmbedBuilder();
@@ -428,6 +433,118 @@ export default class EarthquakeNotifierCommand extends CustomizableCommand {
                     .toJSON(),
             ],
         });
+    }
+
+    /**
+     * Sets the threshold for pinging everyone.
+     * @param interaction The interaction from the settings.
+     * @param args Additional arguments.
+     */
+    @SettingGenericSettingComponent({
+        database: Earthquake,
+        database_key: 'everyone_ping_threshold',
+        format_specifier: '**%s**',
+    })
+    public async setEveryonePingThreshold(
+        interaction: StringSelectMenuInteraction | ButtonInteraction | ModalSubmitInteraction,
+        args?: string,
+    ): Promise<void> {
+        this.log('debug', 'settings.threshold.start', { name: this.name, guild: interaction.guild });
+        const earthquake = (await this.db.findOne(Earthquake, {
+            where: { from_guild: { gid: BigInt(interaction.guildId!) } },
+        }))!;
+        const user = (await this.db.getUser(BigInt(interaction.user.id)))!;
+
+        if (interaction.isButton() && args === 'clear') {
+            earthquake.everyone_ping_threshold = null;
+            earthquake.latest_action_from_user = user;
+            earthquake.timestamp = new Date();
+            await this.db.save(Earthquake, earthquake);
+            await this.settingsUI(interaction);
+            this.log('debug', 'settings.threshold.clear.success', { name: this.name, guild: interaction.guild });
+            return;
+        }
+
+        if (interaction.isButton() && args === 'set') {
+            await interaction.showModal({
+                customId: `settings:earthquake:seteveryonepingthreshold:submit`,
+                title: this.t.commands({
+                    key: 'settings.seteveryonepingthreshold.pretty_name',
+                    guild_id: BigInt(interaction.guildId!),
+                }),
+                components: [
+                    new ActionRowBuilder<TextInputBuilder>().addComponents(
+                        new TextInputBuilder()
+                            .setCustomId('threshold')
+                            .setLabel(
+                                this.t.commands({
+                                    key: 'settings.seteveryonepingthreshold.parameters.threshold.name',
+                                    guild_id: BigInt(interaction.guildId!),
+                                }),
+                            )
+                            .setPlaceholder('6.3')
+                            .setStyle(TextInputStyle.Short)
+                            .setRequired(true),
+                    ),
+                ],
+            });
+            return;
+        }
+
+        if (interaction.isModalSubmit() && args === 'submit') {
+            const threshold_str = interaction.fields.getTextInputValue('threshold');
+            const threshold = parseFloat(threshold_str.replace(',', '.'));
+
+            if (isNaN(threshold)) {
+                this.warning = this.t.commands({
+                    key: 'settings.seteveryonepingthreshold.invalid_value',
+                    guild_id: BigInt(interaction.guildId!),
+                });
+                await this.settingsUI(interaction);
+                return;
+            }
+
+            earthquake.everyone_ping_threshold = threshold;
+            earthquake.latest_action_from_user = user;
+            earthquake.timestamp = new Date();
+            await this.db.save(Earthquake, earthquake);
+            await this.settingsUI(interaction);
+            this.log('debug', 'settings.threshold.success', {
+                name: this.name,
+                guild: interaction.guild,
+                threshold,
+            });
+            return;
+        }
+
+        if (interaction.isStringSelectMenu()) {
+            await interaction.update({
+                components: [
+                    new ActionRowBuilder<ButtonBuilder>().addComponents(
+                        new ButtonBuilder()
+                            .setCustomId(`settings:earthquake:seteveryonepingthreshold:set`)
+                            .setLabel(
+                                this.t.system({
+                                    caller: 'buttons',
+                                    key: 'set',
+                                    guild_id: BigInt(interaction.guildId!),
+                                }),
+                            )
+                            .setStyle(ButtonStyle.Primary),
+                        new ButtonBuilder()
+                            .setCustomId(`settings:earthquake:seteveryonepingthreshold:clear`)
+                            .setLabel(
+                                this.t.system({
+                                    caller: 'buttons',
+                                    key: 'clear',
+                                    guild_id: BigInt(interaction.guildId!),
+                                }),
+                            )
+                            .setStyle(ButtonStyle.Danger),
+                    ),
+                ],
+            });
+        }
     }
 
     /**

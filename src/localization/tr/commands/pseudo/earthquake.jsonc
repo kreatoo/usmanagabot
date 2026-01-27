@@ -67,6 +67,18 @@
                 "clear_label": "Etiketlenecek Rolü Kaldır",
                 "parameters": {},
             },
+            "seteveryonepingthreshold": {
+                "description": "Herkesi etiketlemek (@everyone) için büyüklük eşiğini ayarlar.",
+                "display_name": "@everyone Etiketleme Eşiği",
+                "pretty_name": "@everyone Etiketleme Eşiği",
+                "invalid_value": "Geçersiz büyüklük değeri sağlandı.",
+                "parameters": {
+                    "threshold": {
+                        "name": "Büyüklük Eşiği",
+                        "placeholder": "6.3",
+                    },
+                },
+            },
             "toggle": {
                 "description": "Sunucuda deprem bildirici sistemini etkinleştirir veya devre dışı bırakır.",
                 "pretty_name": "Deprem Bildirici Aktifliği",
@@ -88,6 +100,13 @@
                     "selectmenu": {
                         "start": "\"{guild}\" sunucusunda Deprem Bildirici seçim menüsü ayarı değiştirme işlemi başlatıldı.",
                         "success": "\"{guild}\" sunucusunda Deprem Bildirici seçim menüsü ayarı başarıyla değiştirildi.",
+                    },
+                    "threshold": {
+                        "start": "\"{guild}\" sunucusunda Deprem Bildirici @everyone etiketleme eşiği değiştirme işlemi başlatıldı.",
+                        "success": "\"{guild}\" sunucusunda Deprem Bildirici @everyone etiketleme eşiği başarıyla \"{threshold}\" olarak değiştirildi.",
+                        "clear": {
+                            "success": "\"{guild}\" sunucusunda Deprem Bildirici @everyone etiketleme eşiği başarıyla kaldırıldı.",
+                        },
                     },
                     "role": {
                         "start": "\"{guild}\" sunucusunda Deprem Bildirici etiketlenecek rol değiştirme işlemi başlatıldı.",

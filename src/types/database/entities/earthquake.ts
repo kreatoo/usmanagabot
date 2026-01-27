@@ -16,6 +16,9 @@ export class Earthquake {
     @Column({ type: 'float', nullable: true, default: null })
     magnitude_limit!: number;
 
+    @Column({ type: 'float', nullable: true, default: null })
+    everyone_ping_threshold!: number | null;
+
     @Column({ type: 'text', nullable: true, default: null })
     seismicportal_api_url!: string;
 
