@@ -1,5 +1,8 @@
+import { In } from 'typeorm';
+import { normalizeText } from '@utils/string';
 import { BotClient } from '@services/client';
 import { Earthquake, EarthquakeLogs } from '@src/types/database/entities/earthquake';
+import { EarthquakeSubscription } from '@src/types/database/entities/earthquake_subscription';
 import { Cron } from '@src/types/decorator/cronjob';
 import {
     SettingChannelMenuComponent,
@@ -101,13 +104,32 @@ export default class EarthquakeNotifierCommand extends CustomizableCommand {
                 });
                 if (existing_log?.is_delivered) continue;
 
-                const geo_translate = (
-                    (await (
-                        await fetch(
-                            `https://us1.api-bdc.net/data/reverse-geocode-client?latitude=${eq.properties.lat}&longitude=${eq.properties.lon}&localityLanguage=${guild.region_code}`,
-                        )
-                    ).json()) as { locality: string }
-                ).locality;
+                const geo_response = (await (
+                    await fetch(
+                        `https://us1.api-bdc.net/data/reverse-geocode-client?latitude=${eq.properties.lat}&longitude=${eq.properties.lon}&localityLanguage=${guild.region_code}`,
+                    )
+                ).json()) as { locality?: string; city?: string; principalSubdivision?: string };
+
+                const geo_translate = geo_response.locality || geo_response.city || geo_response.principalSubdivision;
+
+                let content = '';
+                const locations = [geo_response.locality, geo_response.city, geo_response.principalSubdivision]
+                    .filter((loc): loc is string => !!loc)
+                    .map((loc) => normalizeText(loc));
+
+                if (locations.length > 0) {
+                    const subscriptions = await this.db.find(EarthquakeSubscription, {
+                        where: {
+                            guild: { gid: guild.from_guild.gid },
+                            city: In(locations),
+                        },
+                    });
+
+                    if (subscriptions.length > 0) {
+                        const userIds = [...new Set(subscriptions.map((sub) => sub.user.uid))];
+                        content = userIds.map((uid) => `<@${uid}>`).join(' ');
+                    }
+                }
 
                 const post = new EmbedBuilder();
                 post.setTitle(
@@ -175,7 +197,7 @@ export default class EarthquakeNotifierCommand extends CustomizableCommand {
                     logs.source_name = eq.properties.auth;
                     logs.from_guild = guild.from_guild;
                     await channel
-                        .send({ embeds: [post] })
+                        .send({ content: content || undefined, embeds: [post] })
                         .then(() => {
                             logs.is_delivered = true;
                             delivered_count++;
