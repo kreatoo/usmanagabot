@@ -13,11 +13,15 @@ import {
 import { CustomizableCommand } from '@src/types/structure/command';
 import {
     ActionRowBuilder,
+    ButtonBuilder,
+    ButtonInteraction,
+    ButtonStyle,
     ChannelSelectMenuInteraction,
     ChannelType,
     Colors,
     EmbedBuilder,
     ModalSubmitInteraction,
+    RoleSelectMenuBuilder,
     RoleSelectMenuInteraction,
     StringSelectMenuBuilder,
     StringSelectMenuInteraction,
@@ -282,30 +286,80 @@ export default class EarthquakeNotifierCommand extends CustomizableCommand {
 
     /**
      * Sets the role to be pinged on every earthquake.
-     * @param interaction The interaction from the role select menu.
+     * @param interaction The interaction from the role select menu or button.
+     * @param args Additional arguments (e.g., 'clear').
      */
-    @SettingRoleSelectMenuComponent({
+    @SettingGenericSettingComponent({
         database: Earthquake,
         database_key: 'ping_role_id',
         format_specifier: '<@&%s>',
     })
-    public async setPingRole(interaction: RoleSelectMenuInteraction): Promise<void> {
+    public async setPingRole(
+        interaction: StringSelectMenuInteraction | RoleSelectMenuInteraction | ButtonInteraction,
+        args?: string,
+    ): Promise<void> {
         this.log('debug', 'settings.role.start', { name: this.name, guild: interaction.guild });
-        const earthquake = await this.db.findOne(Earthquake, {
+        const earthquake = (await this.db.findOne(Earthquake, {
             where: { from_guild: { gid: BigInt(interaction.guildId!) } },
-        });
+        }))!;
         const user = (await this.db.getUser(BigInt(interaction.user.id)))!;
 
-        earthquake!.ping_role_id = interaction.values[0];
-        earthquake!.latest_action_from_user = user;
-        earthquake!.timestamp = new Date();
-        await this.db.save(Earthquake, earthquake!);
-        await this.settingsUI(interaction);
-        this.log('debug', 'settings.role.success', {
-            name: this.name,
-            guild: interaction.guild,
-            role: earthquake!.ping_role_id,
-        });
+        if (interaction.isRoleSelectMenu()) {
+            earthquake.ping_role_id = interaction.values[0];
+            earthquake.latest_action_from_user = user;
+            earthquake.timestamp = new Date();
+            await this.db.save(Earthquake, earthquake);
+            await this.settingsUI(interaction);
+            this.log('debug', 'settings.role.success', {
+                name: this.name,
+                guild: interaction.guild,
+                role: earthquake.ping_role_id,
+            });
+            return;
+        }
+
+        if (interaction.isButton() && args === 'clear') {
+            earthquake.ping_role_id = null as any; // TypeORM will handle null
+            earthquake.latest_action_from_user = user;
+            earthquake.timestamp = new Date();
+            await this.db.save(Earthquake, earthquake);
+            await this.settingsUI(interaction);
+            this.log('debug', 'settings.role.clear.success', {
+                name: this.name,
+                guild: interaction.guild,
+            });
+            return;
+        }
+
+        if (interaction.isStringSelectMenu()) {
+            await interaction.update({
+                components: [
+                    new ActionRowBuilder<RoleSelectMenuBuilder>().addComponents(
+                        new RoleSelectMenuBuilder()
+                            .setCustomId(`settings:earthquake:setpingrole`)
+                            .setPlaceholder(
+                                this.t.commands({
+                                    key: 'settings.setpingrole.placeholder',
+                                    guild_id: BigInt(interaction.guildId!),
+                                }),
+                            )
+                            .setMinValues(1)
+                            .setMaxValues(1),
+                    ),
+                    new ActionRowBuilder<ButtonBuilder>().addComponents(
+                        new ButtonBuilder()
+                            .setCustomId(`settings:earthquake:setpingrole:clear`)
+                            .setLabel(
+                                this.t.commands({
+                                    key: 'settings.setpingrole.clear_label',
+                                    guild_id: BigInt(interaction.guildId!),
+                                }),
+                            )
+                            .setStyle(ButtonStyle.Danger),
+                    ),
+                ],
+            });
+        }
     }
 
     /**

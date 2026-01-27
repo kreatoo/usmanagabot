@@ -64,6 +64,7 @@
                 "display_name": "Etiketlenecek Rol",
                 "placeholder": "Etiketlenecek bir rol seçin",
                 "pretty_name": "Etiketlenecek Rol",
+                "clear_label": "Etiketlenecek Rolü Kaldır",
                 "parameters": {},
             },
             "toggle": {

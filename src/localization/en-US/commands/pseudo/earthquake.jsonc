@@ -64,6 +64,7 @@
                 "display_name": "Ping Role",
                 "placeholder": "Select a role to ping",
                 "pretty_name": "Ping Role",
+                "clear_label": "Remove Ping Role",
                 "parameters": {},
             },
             "toggle": {
