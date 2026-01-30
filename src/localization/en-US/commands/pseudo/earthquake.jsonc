@@ -77,6 +77,7 @@
                 "description": "Sets the magnitude threshold for pinging everyone.",
                 "display_name": "@everyone Ping Threshold",
                 "pretty_name": "@everyone Ping Threshold",
+		"placeholder": "Select the minimum threshold",
                 "invalid_value": "Invalid magnitude value provided.",
                 "parameters": {
                     "threshold": {

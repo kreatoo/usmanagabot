@@ -100,9 +100,7 @@ function generateSettingComponent(
             database: o.database,
             database_key: o.database_key,
             display_name:
-                pretty_key == 'toggle'
-                    ? 'command.settings.toggle.display_name'
-                    : `settings.${pretty_key}.display_name`,
+                pretty_key == 'toggle' ? 'command.settings.toggle.display_name' : `settings.${pretty_key}.display_name`,
             description: `settings.${pretty_key}.description`,
             format_specifier: o.format_specifier ?? 'command.settings.view_in_edit_mode',
             db_column_is_array: o.db_column_is_array ?? false,
@@ -134,7 +132,7 @@ export function SettingGenericSettingComponent(o: Partial<componentOptions>): Me
  * @param {object} o The options for the string select menu.
  */
 export function SettingStringSelectComponent(
-    o: Partial<Omit<componentOptions, 'description' | 'display_name' | 'pretty' >> & {
+    o: Partial<Omit<componentOptions, 'description' | 'display_name' | 'pretty'>> & {
         options?: {
             min_values?: number;
             max_values?: number;
@@ -143,7 +141,7 @@ export function SettingStringSelectComponent(
     },
 ): MethodDecorator {
     return generateSettingComponent(o, (orig, { name, pretty_key, options }) => {
-        return async function(this, interaction, ...args: unknown[]) {
+        return async function (this, interaction, ...args: unknown[]) {
             if (interaction.isStringSelectMenu() && args.length > 0) {
                 return await orig.apply(this, [interaction, ...args]);
             } else if (interaction.isStringSelectMenu()) {
@@ -152,7 +150,13 @@ export function SettingStringSelectComponent(
                         new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(
                             new StringSelectMenuBuilder()
                                 .setCustomId(`settings:${name}:${pretty_key}`)
-                                .setPlaceholder(t.commands({ caller: name, key: `settings.${pretty_key}.placeholder`, guild_id: BigInt(interaction.guildId!) }))
+                                .setPlaceholder(
+                                    t.commands({
+                                        caller: name,
+                                        key: `settings.${pretty_key}.placeholder`,
+                                        guild_id: BigInt(interaction.guildId!),
+                                    }),
+                                )
                                 .setMinValues((options as typeof o).options?.min_values ?? 1)
                                 .setMaxValues((options as typeof o).options?.max_values ?? 1)
                                 .addOptions(
@@ -179,7 +183,7 @@ export function SettingStringSelectComponent(
  * @param {object} o The options for the channel select menu.
  */
 export function SettingChannelMenuComponent(
-    o: Partial<Omit<componentOptions, 'description' | 'display_name' | 'pretty' >> & {
+    o: Partial<Omit<componentOptions, 'description' | 'display_name' | 'pretty'>> & {
         options?: {
             channel_types?: ChannelType[];
             min_values?: number;
@@ -189,7 +193,7 @@ export function SettingChannelMenuComponent(
     },
 ): MethodDecorator {
     return generateSettingComponent(o, (orig, { name, pretty_key, options }) => {
-        return async function(this, interaction, ...args: unknown[]) {
+        return async function (this, interaction, ...args: unknown[]) {
             if (interaction.isChannelSelectMenu()) {
                 return await orig.apply(this, [interaction, ...args]);
             }
@@ -203,7 +207,8 @@ export function SettingChannelMenuComponent(
                             .setPlaceholder(
                                 t.commands({
                                     caller: name,
-                                    key: (options as typeof o).options?.placeholder ??
+                                    key:
+                                        (options as typeof o).options?.placeholder ??
                                         `settings.${pretty_key}.placeholder`,
                                     guild_id: BigInt(interaction.guildId!),
                                 }),
@@ -227,7 +232,7 @@ export function SettingChannelMenuComponent(
  * @param {object} o The options for the role select menu.
  */
 export function SettingRoleSelectMenuComponent(
-    o: Partial<Omit<componentOptions, 'description' | 'display_name' | 'pretty' >> & {
+    o: Partial<Omit<componentOptions, 'description' | 'display_name' | 'pretty'>> & {
         options?: {
             min_values?: number;
             max_values?: number;
@@ -236,7 +241,7 @@ export function SettingRoleSelectMenuComponent(
     },
 ): MethodDecorator {
     return generateSettingComponent(o, (orig, { name, pretty_key, options }) => {
-        return async function(this, interaction, ...args: unknown[]) {
+        return async function (this, interaction, ...args: unknown[]) {
             if (interaction.isRoleSelectMenu()) {
                 return await orig.apply(this, [interaction, ...args]);
             }
@@ -250,7 +255,8 @@ export function SettingRoleSelectMenuComponent(
                             .setPlaceholder(
                                 t.commands({
                                     caller: name,
-                                    key: (options as typeof o).options?.placeholder ??
+                                    key:
+                                        (options as typeof o).options?.placeholder ??
                                         `settings.${pretty_key}.placeholder`,
                                     guild_id: BigInt(interaction.guildId!),
                                 }),
@@ -273,7 +279,7 @@ export function SettingRoleSelectMenuComponent(
  * @param {object} o The options for the user select menu.
  */
 export function SettingUserSelectMenuComponent(
-    o: Partial<Omit<componentOptions, 'description' | 'display_name' | 'pretty' >> & {
+    o: Partial<Omit<componentOptions, 'description' | 'display_name' | 'pretty'>> & {
         options?: {
             min_values?: number;
             max_values?: number;
@@ -282,7 +288,7 @@ export function SettingUserSelectMenuComponent(
     },
 ): MethodDecorator {
     return generateSettingComponent(o, (orig, { name, pretty_key, options }) => {
-        return async function(this, interaction, ...args: unknown[]) {
+        return async function (this, interaction, ...args: unknown[]) {
             if (interaction.isUserSelectMenu()) {
                 return await orig.apply(this, [interaction, ...args]);
             }
@@ -296,7 +302,8 @@ export function SettingUserSelectMenuComponent(
                             .setPlaceholder(
                                 t.commands({
                                     caller: name,
-                                    key: (options as typeof o).options?.placeholder ??
+                                    key:
+                                        (options as typeof o).options?.placeholder ??
                                         `settings.${pretty_key}.placeholder`,
                                     guild_id: BigInt(interaction.guildId!),
                                 }),
@@ -323,7 +330,7 @@ export function SettingUserSelectMenuComponent(
  * @param {object} o The options for the modal component.
  */
 export function SettingModalComponent(
-    o: Partial<Omit<componentOptions, 'description' | 'display_name' | 'pretty' >> & {
+    o: Partial<Omit<componentOptions, 'description' | 'display_name' | 'pretty'>> & {
         require_selectmenu?: boolean;
         select_menu?: {
             enable: boolean;
@@ -342,7 +349,7 @@ export function SettingModalComponent(
     },
 ): MethodDecorator {
     return generateSettingComponent(o, (orig, { name, pretty_key, options }) => {
-        return async function(this, interaction, ...args: unknown[]) {
+        return async function (this, interaction, ...args: unknown[]) {
             if (interaction.isModalSubmit()) {
                 if ((options as typeof o).require_selectmenu) {
                     const custom_id_parts = interaction.customId.split(':');
@@ -367,8 +374,20 @@ export function SettingModalComponent(
             const buildTextInput = (input: (typeof o.inputs)[number], value?: string) => {
                 const ti = new TextInputBuilder()
                     .setCustomId(input.id)
-                    .setLabel(t.commands({ caller: name, key: `settings.${pretty_key}.parameters.${input.id}.name`, guild_id: BigInt(interaction.guildId!) }))
-                    .setPlaceholder(t.commands({ caller: name, key: `settings.${pretty_key}.parameters.${input.id}.placeholder`, guild_id: BigInt(interaction.guildId!) }))
+                    .setLabel(
+                        t.commands({
+                            caller: name,
+                            key: `settings.${pretty_key}.parameters.${input.id}.name`,
+                            guild_id: BigInt(interaction.guildId!),
+                        }),
+                    )
+                    .setPlaceholder(
+                        t.commands({
+                            caller: name,
+                            key: `settings.${pretty_key}.parameters.${input.id}.placeholder`,
+                            guild_id: BigInt(interaction.guildId!),
+                        }),
+                    )
                     .setStyle(input.style ?? TextInputStyle.Short)
                     .setRequired(input.required ?? true);
 
@@ -392,7 +411,11 @@ export function SettingModalComponent(
                     if (config!.include_cancel !== false) {
                         select_options.push({
                             label: t.system({ caller: 'buttons', key: 'back', guild_id: BigInt(interaction.guildId!) }),
-                            description: t.system({ caller: 'labels', key: 'backDescription', guild_id: BigInt(interaction.guildId!) }),
+                            description: t.system({
+                                caller: 'labels',
+                                key: 'backDescription',
+                                guild_id: BigInt(interaction.guildId!),
+                            }),
                             value: `settings:${name}`,
                         });
                     }
@@ -403,7 +426,11 @@ export function SettingModalComponent(
                                 new StringSelectMenuBuilder()
                                     .setCustomId(`settings:${name}:${pretty_key}`)
                                     .setPlaceholder(
-                                        t.commands({ caller: name, key: `settings.${pretty_key}.placeholder`, guild_id: BigInt(interaction.guildId!) }),
+                                        t.commands({
+                                            caller: name,
+                                            key: `settings.${pretty_key}.placeholder`,
+                                            guild_id: BigInt(interaction.guildId!),
+                                        }),
                                     )
                                     .addOptions(select_options),
                             ),
@@ -427,7 +454,14 @@ export function SettingModalComponent(
                     await interaction.showModal(
                         new ModalBuilder()
                             .setCustomId(`settings:${name}:${pretty_key}:${selected_value}`)
-                            .setTitle(t.commands({ caller: name, key: `settings.${pretty_key}.title`, replacements: { name: selected_value }, guild_id: BigInt(interaction.guildId!) }))
+                            .setTitle(
+                                t.commands({
+                                    caller: name,
+                                    key: `settings.${pretty_key}.title`,
+                                    replacements: { name: selected_value },
+                                    guild_id: BigInt(interaction.guildId!),
+                                }),
+                            )
                             .addComponents(components),
                     );
                     return;
@@ -463,7 +497,13 @@ export function SettingModalComponent(
             await interaction.showModal(
                 new ModalBuilder()
                     .setCustomId(`settings:${name}:${pretty_key}`)
-                    .setTitle(t.commands({ caller: name, key: `settings.${pretty_key}.pretty_name`, guild_id: BigInt(interaction.guildId!) }))
+                    .setTitle(
+                        t.commands({
+                            caller: name,
+                            key: `settings.${pretty_key}.pretty_name`,
+                            guild_id: BigInt(interaction.guildId!),
+                        }),
+                    )
                     .addComponents(components),
             );
         };
