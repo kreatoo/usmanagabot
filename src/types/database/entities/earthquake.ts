@@ -16,8 +16,14 @@ export class Earthquake {
     @Column({ type: 'float', nullable: true, default: null })
     magnitude_limit!: number;
 
+    @Column({ type: 'float', nullable: true, default: null })
+    everyone_ping_threshold!: number | null;
+
     @Column({ type: 'text', nullable: true, default: null })
     seismicportal_api_url!: string;
+
+    @Column({ type: 'bigint', nullable: true, default: null })
+    ping_role_id!: string;
 
     @Column({ type: 'varchar', nullable: true, default: 'en', length: 8 })
     region_code!: string;

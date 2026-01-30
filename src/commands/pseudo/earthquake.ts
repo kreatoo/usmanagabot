@@ -1,21 +1,31 @@
+import { In } from 'typeorm';
+import { normalizeText } from '@utils/string';
 import { BotClient } from '@services/client';
 import { Earthquake, EarthquakeLogs } from '@src/types/database/entities/earthquake';
+import { EarthquakeSubscription } from '@src/types/database/entities/earthquake_subscription';
 import { Cron } from '@src/types/decorator/cronjob';
 import {
     SettingChannelMenuComponent,
     SettingGenericSettingComponent,
     SettingModalComponent,
+    SettingRoleSelectMenuComponent,
 } from '@src/types/decorator/settingcomponents';
 import { CustomizableCommand } from '@src/types/structure/command';
 import {
     ActionRowBuilder,
+    ButtonBuilder,
+    ButtonInteraction,
+    ButtonStyle,
     ChannelSelectMenuInteraction,
     ChannelType,
     Colors,
     EmbedBuilder,
     ModalSubmitInteraction,
+    RoleSelectMenuBuilder,
+    RoleSelectMenuInteraction,
     StringSelectMenuBuilder,
     StringSelectMenuInteraction,
+    TextInputBuilder,
     TextInputStyle,
 } from 'discord.js';
 
@@ -101,13 +111,40 @@ export default class EarthquakeNotifierCommand extends CustomizableCommand {
                 });
                 if (existing_log?.is_delivered) continue;
 
-                const geo_translate = (
-                    (await (
-                        await fetch(
-                            `https://us1.api-bdc.net/data/reverse-geocode-client?latitude=${eq.properties.lat}&longitude=${eq.properties.lon}&localityLanguage=${guild.region_code}`,
-                        )
-                    ).json()) as { locality: string }
-                ).locality;
+                const geo_response = (await (
+                    await fetch(
+                        `https://us1.api-bdc.net/data/reverse-geocode-client?latitude=${eq.properties.lat}&longitude=${eq.properties.lon}&localityLanguage=${guild.region_code}`,
+                    )
+                ).json()) as { locality?: string; city?: string; principalSubdivision?: string };
+
+                const geo_translate = geo_response.locality || geo_response.city || geo_response.principalSubdivision;
+
+                const locations = [geo_response.locality, geo_response.city, geo_response.principalSubdivision]
+                    .filter((loc): loc is string => !!loc)
+                    .map((loc) => normalizeText(loc));
+
+                const subscribedUserIds: bigint[] = [];
+                if (locations.length > 0) {
+                    const subscriptions = await this.db.find(EarthquakeSubscription, {
+                        where: {
+                            guild: { gid: guild.from_guild.gid },
+                            city: In(locations),
+                        },
+                    });
+
+                    if (subscriptions.length > 0) {
+                        subscribedUserIds.push(...new Set(subscriptions.map((sub) => sub.user.uid)));
+                    }
+                }
+
+                let content = '';
+                if (guild.ping_role_id) {
+                    content = `<@&${guild.ping_role_id}>`;
+                }
+
+                if (guild.everyone_ping_threshold !== null && eq.properties.mag >= guild.everyone_ping_threshold) {
+                    content = (content ? content + ' ' : '') + '@everyone';
+                }
 
                 const post = new EmbedBuilder();
                 post.setTitle(
@@ -175,10 +212,25 @@ export default class EarthquakeNotifierCommand extends CustomizableCommand {
                     logs.source_name = eq.properties.auth;
                     logs.from_guild = guild.from_guild;
                     await channel
-                        .send({ embeds: [post] })
-                        .then(() => {
+                        .send({ content: content || undefined, embeds: [post] })
+                        .then(async () => {
                             logs.is_delivered = true;
                             delivered_count++;
+
+                            // Send DMs to subscribed users
+                            for (const uid of subscribedUserIds) {
+                                try {
+                                    const user = await BotClient.client.users.fetch(uid.toString());
+                                    if (user) {
+                                        await user.send({ embeds: [post] });
+                                    }
+                                } catch (error) {
+                                    this.log('debug', 'cronjob.dm.failed', {
+                                        user: uid,
+                                        error: (error as Error).message,
+                                    });
+                                }
+                            }
                         })
                         .catch(() => {
                             logs.is_delivered = false;
@@ -253,6 +305,84 @@ export default class EarthquakeNotifierCommand extends CustomizableCommand {
     }
 
     /**
+     * Sets the role to be pinged on every earthquake.
+     * @param interaction The interaction from the role select menu or button.
+     * @param args Additional arguments (e.g., 'clear').
+     */
+    @SettingGenericSettingComponent({
+        database: Earthquake,
+        database_key: 'ping_role_id',
+        format_specifier: '<@&%s>',
+    })
+    public async setPingRole(
+        interaction: StringSelectMenuInteraction | RoleSelectMenuInteraction | ButtonInteraction,
+        args?: string,
+    ): Promise<void> {
+        this.log('debug', 'settings.role.start', { name: this.name, guild: interaction.guild });
+        const earthquake = (await this.db.findOne(Earthquake, {
+            where: { from_guild: { gid: BigInt(interaction.guildId!) } },
+        }))!;
+        const user = (await this.db.getUser(BigInt(interaction.user.id)))!;
+
+        if (interaction.isRoleSelectMenu()) {
+            earthquake.ping_role_id = interaction.values[0];
+            earthquake.latest_action_from_user = user;
+            earthquake.timestamp = new Date();
+            await this.db.save(Earthquake, earthquake);
+            await this.settingsUI(interaction);
+            this.log('debug', 'settings.role.success', {
+                name: this.name,
+                guild: interaction.guild,
+                role: earthquake.ping_role_id,
+            });
+            return;
+        }
+
+        if (interaction.isButton() && args === 'clear') {
+            earthquake.ping_role_id = null as any; // TypeORM will handle null
+            earthquake.latest_action_from_user = user;
+            earthquake.timestamp = new Date();
+            await this.db.save(Earthquake, earthquake);
+            await this.settingsUI(interaction);
+            this.log('debug', 'settings.role.clear.success', {
+                name: this.name,
+                guild: interaction.guild,
+            });
+            return;
+        }
+
+        if (interaction.isStringSelectMenu()) {
+            await interaction.update({
+                components: [
+                    new ActionRowBuilder<RoleSelectMenuBuilder>().addComponents(
+                        new RoleSelectMenuBuilder()
+                            .setCustomId(`settings:earthquake:setpingrole`)
+                            .setPlaceholder(
+                                this.t.commands({
+                                    key: 'settings.setpingrole.placeholder',
+                                    guild_id: BigInt(interaction.guildId!),
+                                }),
+                            )
+                            .setMinValues(1)
+                            .setMaxValues(1),
+                    ),
+                    new ActionRowBuilder<ButtonBuilder>().addComponents(
+                        new ButtonBuilder()
+                            .setCustomId(`settings:earthquake:setpingrole:clear`)
+                            .setLabel(
+                                this.t.commands({
+                                    key: 'settings.setpingrole.clear_label',
+                                    guild_id: BigInt(interaction.guildId!),
+                                }),
+                            )
+                            .setStyle(ButtonStyle.Danger),
+                    ),
+                ],
+            });
+        }
+    }
+
+    /**
      * Sets the minimum magnitude limit for reporting earthquakes.
      * This is a two-step setting: first, it presents a select menu with magnitude options.
      * Then, it saves the selected value.
@@ -286,7 +416,7 @@ export default class EarthquakeNotifierCommand extends CustomizableCommand {
                 new ActionRowBuilder<StringSelectMenuBuilder>()
                     .addComponents(
                         new StringSelectMenuBuilder()
-                            .setCustomId('settings:earthquake:setmagnitude')
+                            .setCustomId('settings:earthquake:setmagnitudelimit')
                             .setPlaceholder(
                                 this.t.commands({
                                     key: 'settings.setmagnitudelimit.placeholder',
@@ -303,6 +433,92 @@ export default class EarthquakeNotifierCommand extends CustomizableCommand {
                     .toJSON(),
             ],
         });
+    }
+
+    /**
+     * Sets the threshold for pinging everyone.
+     * @param interaction The interaction from the settings.
+     * @param args Additional arguments.
+     */
+    @SettingGenericSettingComponent({
+        database: Earthquake,
+        database_key: 'everyone_ping_threshold',
+        format_specifier: '**%s**',
+    })
+    public async setEveryonePingThreshold(
+        interaction: StringSelectMenuInteraction | ButtonInteraction,
+        args?: string,
+    ): Promise<void> {
+        this.log('debug', 'settings.threshold.start', { name: this.name, guild: interaction.guild });
+        const earthquake = (await this.db.findOne(Earthquake, {
+            where: { from_guild: { gid: BigInt(interaction.guildId!) } },
+        }))!;
+        const user = (await this.db.getUser(BigInt(interaction.user.id)))!;
+
+        // Handle clear button
+        if (interaction.isButton() && args === 'clear') {
+            earthquake.everyone_ping_threshold = null;
+            earthquake.latest_action_from_user = user;
+            earthquake.timestamp = new Date();
+            await this.db.save(Earthquake, earthquake);
+            await this.settingsUI(interaction);
+            this.log('debug', 'settings.threshold.clear.success', { name: this.name, guild: interaction.guild });
+            return;
+        }
+
+        // Handle select menu selection
+        if (interaction.isStringSelectMenu() && args) {
+            const threshold = parseFloat(args);
+            earthquake.everyone_ping_threshold = threshold;
+            earthquake.latest_action_from_user = user;
+            earthquake.timestamp = new Date();
+            await this.db.save(Earthquake, earthquake);
+            await this.settingsUI(interaction);
+            this.log('debug', 'settings.threshold.success', {
+                name: this.name,
+                guild: interaction.guild,
+                threshold,
+            });
+            return;
+        }
+
+        // Show select menu with predefined options
+        if (interaction.isStringSelectMenu()) {
+            await interaction.update({
+                components: [
+                    new ActionRowBuilder<StringSelectMenuBuilder>()
+                        .addComponents(
+                            new StringSelectMenuBuilder()
+                                .setCustomId('settings:earthquake:seteveryonepingthreshold')
+                                .setPlaceholder(
+                                    this.t.commands({
+                                        key: 'settings.seteveryonepingthreshold.placeholder',
+                                        guild_id: BigInt(interaction.guildId!),
+                                    }),
+                                )
+                                .addOptions(
+                                    ['5.0', '5.5', '6.0', '6.5', '7.0', '7.5', '8.0'].map((threshold) => ({
+                                        label: threshold,
+                                        value: `settings:earthquake:seteveryonepingthreshold:${threshold}`,
+                                    })),
+                                ),
+                        )
+                        .toJSON(),
+                    new ActionRowBuilder<ButtonBuilder>().addComponents(
+                        new ButtonBuilder()
+                            .setCustomId(`settings:earthquake:seteveryonepingthreshold:clear`)
+                            .setLabel(
+                                this.t.system({
+                                    caller: 'buttons',
+                                    key: 'clear',
+                                    guild_id: BigInt(interaction.guildId!),
+                                }),
+                            )
+                            .setStyle(ButtonStyle.Danger),
+                    ),
+                ],
+            });
+        }
     }
 
     /**
