@@ -25,7 +25,7 @@ interface pageItem {
     config: {
         title: string;
         color: ColorResolvable;
-        items: { name: string; pretty_name: string; description: string; namespace: 'command' | 'settings' }[];
+        items: { name: string; pretty_name: string; description?: string; namespace: 'command' | 'settings' }[];
         items_per_page: number;
         select_menu_placeholder?: string;
         enable_select_menu_descriptions?: boolean;
@@ -130,7 +130,7 @@ export class Paginator {
             .slice(start_index, end_index);
 
         for (const item of page_items) {
-            description += `**${item.pretty_name}**\n${item.description}\n\n`;
+            description += `**${item.pretty_name}**${item.description ? `\n${item.description}` : ''}\n\n`;
         }
 
         post.setDescription(description.trim() || 'No items available.');

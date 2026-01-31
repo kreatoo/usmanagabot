@@ -256,7 +256,6 @@ export default class EarthquakeNotifierCommand extends CustomizableCommand {
                         items: subscriptions.map((sub) => ({
                             name: sub.city,
                             pretty_name: sub.city,
-                            description: `Subscribed to earthquake alerts for ${sub.city}`,
                             namespace: 'command' as const,
                         })),
                         items_per_page: 10,
