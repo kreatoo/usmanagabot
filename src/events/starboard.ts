@@ -65,7 +65,13 @@ class StarboardReactionAddEvent extends BaseEvent<Events.MessageReactionAdd> {
 
             if (!starboardChannel?.isTextBased()) return;
 
-            const embed = {
+            const embed: {
+                author: { name: string; icon_url: string | undefined };
+                description: string;
+                color: 0xffac33;
+                footer: { text: string };
+                image?: { url: string };
+            } = {
                 author: {
                     name: message.author?.username ?? 'Unknown',
                     icon_url: message.author?.displayAvatarURL(),
@@ -74,6 +80,10 @@ class StarboardReactionAddEvent extends BaseEvent<Events.MessageReactionAdd> {
                 color: 0xffac33 as const,
                 footer: { text: `in #${(message.channel as Channel).name}` },
             };
+
+            if (message.attachments.size > 0) {
+                embed.image = { url: message.attachments.first()!.url };
+            }
 
             if (starboard.starboard_message_id) {
                 try {
