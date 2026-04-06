@@ -64,7 +64,7 @@
                 "pretty_name": "Delete When Below Threshold",
                 "parameters": {},
             },
-            "toggleallowbot": {
+            "toggleallowbotmessages": {
                 "description": "Allows starring messages from other bots.",
                 "display_name": "Allow Bot Messages",
                 "pretty_name": "Allow Bot Messages",

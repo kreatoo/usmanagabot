@@ -64,7 +64,7 @@
                 "pretty_name": "Eşik Altındayken Sil",
                 "parameters": {},
             },
-            "toggleallowbot": {
+            "toggleallowbotmessages": {
                 "description": "Diğer botların mesajlarının yıldızlanmasına izin verir.",
                 "display_name": "Bot Mesajlarına İzin Ver",
                 "pretty_name": "Bot Mesajlarına İzin Ver",
