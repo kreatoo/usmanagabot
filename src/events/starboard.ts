@@ -16,13 +16,19 @@ class StarboardReactionAddEvent extends BaseEvent<Events.MessageReactionAdd> {
             if (user.bot || !user.id) return;
 
             const message = await reaction.message.fetch();
-            if (!message.guild?.id || message.author?.bot) return;
+            if (!message.guild?.id) return;
+
+            // Always exclude UsmanAga's own messages
+            if (message.author?.id === BotClient.client.user?.id) return;
 
             const guild = await this.db.getGuild(BigInt(message.guild.id));
             if (!guild) return;
 
             const settings = await this.db.findOne(StarboardSettings, { where: { from_guild: { id: guild.id } } });
             if (!settings?.is_enabled || !settings?.starboard_channel_id) return;
+
+            // Check bot message setting for other bots
+            if (message.author?.bot && !settings.allow_bot_messages) return;
 
             const reactionEmoji = reaction.emoji.id ? reaction.emoji.toString() : reaction.emoji.name;
             if (reactionEmoji !== settings.emoji) return;
@@ -132,13 +138,19 @@ class StarboardReactionRemoveEvent extends BaseEvent<Events.MessageReactionRemov
             if (user.bot || !user.id) return;
 
             const message = await reaction.message.fetch();
-            if (!message.guild?.id || message.author?.bot) return;
+            if (!message.guild?.id) return;
+
+            // Always exclude UsmanAga's own messages
+            if (message.author?.id === BotClient.client.user?.id) return;
 
             const guild = await this.db.getGuild(BigInt(message.guild.id));
             if (!guild) return;
 
             const settings = await this.db.findOne(StarboardSettings, { where: { from_guild: { id: guild.id } } });
             if (!settings?.is_enabled || !settings?.starboard_channel_id) return;
+
+            // Check bot message setting for other bots
+            if (message.author?.bot && !settings.allow_bot_messages) return;
 
             const reactionEmoji = reaction.emoji.id ? reaction.emoji.toString() : reaction.emoji.name;
             if (reactionEmoji !== settings.emoji) return;
